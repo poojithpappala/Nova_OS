@@ -6,7 +6,7 @@
 #define R_GREEN   "\033[32m"
 #define RESET     "\033[0m"
 #define R_YELLOW  "\033[33m"
-#define VERSION "1.2"   
+#define VERSION "1.1"   
 
 int main(){
     printf(R_YELLOW"\n\n\n-------NOVA OS v%s-------\n\n\n"RESET, VERSION);
