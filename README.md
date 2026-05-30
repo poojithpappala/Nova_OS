@@ -11,4 +11,4 @@ A Custom Shell interface built in C-Language. This is the parent shell which run
 
 # version - features
 * 1.0 - just basic loops for commands execution(version, help, quit)
-*1.2 
+* 1.1 - a dynamic command parser
