@@ -6,18 +6,25 @@
 #define R_GREEN   "\033[32m"
 #define RESET     "\033[0m"
 #define R_YELLOW  "\033[33m"
-#define VERSION "1.1"   
+#define VERSION "v1.3"   
 
 int main(){
-    printf(R_YELLOW"\n\n\n-------NOVA OS v%s-------\n\n\n"RESET, VERSION);
+    printf(R_YELLOW"\n\n\n-------NOVA OS %s-------\n\n\n"RESET, VERSION);
 
     while(1){
 
-        //printf("shellpid: %d", getpid()); 
+        //checking background processes if any thing has completed 
+        pid_t completed_pid;
+        int status;
+
+        while((completed_pid = waitpid(-1, &status, WNOHANG)) > 0){
+            printf("Background job %d is finished!\n", completed_pid);
+        }
+        
         printf(R_GREEN"nova"RESET);
         printf(": ");
         fflush(stdout);
-        
+
         //creating a buffer for storing the commands
         char buffer[100];
 
@@ -29,7 +36,7 @@ int main(){
             continue;   //handling empty commands
         }
 
-
+        
         buffer[strcspn(buffer,"\n")] = '\0';//we are making it as a string by adding the null terminator
 
 
@@ -46,18 +53,29 @@ int main(){
         else{
             char *args[10];
             int i = 0;
+            int bg_process = 0;
 
             char* token = strtok(buffer, " ");
+
+
             while(token != NULL && i<9){
+                if(strcmp(token, "&") == 0){
+                    bg_process =1;
+                    token = strtok(NULL, " ");
+                    continue;   
+                }
                 args[i++] = token;
                 token = strtok(NULL, " ");
+                
             }
             args[i] = NULL;
 
             pid_t pid = fork(); //childpid
+
             if(pid < 0 ){
                 perror("Fork Failed!!!");
-            }else if(pid == 0){
+            }
+            else if(pid == 0){
                 if(execvp(args[0], args) < 0){
                     perror("command not found!");
                     _exit(1);
@@ -72,7 +90,11 @@ int main(){
                     */
                 }
             }else{
-                    wait(NULL);
+                    if(bg_process){
+                        printf("background process running....\n");
+                    }else{
+                        waitpid(pid, &status, 0);
+                    }
             }
 
         }
