@@ -59,15 +59,16 @@ int main(){
 
 
             while(token != NULL && i<9){
-                if(strcmp(token, "&") == 0){
-                    bg_process =1;
-                    token = strtok(NULL, " ");
-                    continue;   
+                    args[i++] = token;
+                    token = strtok(NULL, " ");  
                 }
-                args[i++] = token;
-                token = strtok(NULL, " ");
-                
+
+            if(i>0 && strcmp(args[i-1], "&") == 0){
+                bg_process=1;
+                args[i-1] = NULL;
             }
+                
+            
             args[i] = NULL;
 
             pid_t pid = fork(); //childpid
@@ -93,7 +94,14 @@ int main(){
                     if(bg_process){
                         printf("background process running....\n");
                     }else{
-                        waitpid(pid, &status, 0);
+                        waitpid(pid, &status, WUNTRACED);
+                        
+                        if(WIFSIGNALED(status)){
+                            printf("%d is killed by signal %d", pid, WTERMSIG(status));
+                        }
+                        else if(WIFSTOPPED(status)){
+                            printf("%d is stopped by signal %d", pid, WSTOPSIG(status));
+                        }
                     }
             }
 
