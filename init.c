@@ -2,15 +2,23 @@
 #include <string.h>
 #include <unistd.h>
 #include <sys/wait.h>
+#include <signal.h>
 
 #define R_GREEN   "\033[32m"
 #define RESET     "\033[0m"
 #define R_YELLOW  "\033[33m"
-#define VERSION "v1.3"   
+#define VERSION "v1.4"   
+
+//structure for handling stopped jobs
+typedef struct{
+    pid_t pid;
+    char command[100];
+} Job;
 
 int main(){
     printf(R_YELLOW"\n\n\n-------NOVA OS %s-------\n\n\n"RESET, VERSION);
-
+    Job stopped_jobs[10];
+    int stopped_jobs_count = 0;
     while(1){
 
         //checking background processes if any thing has completed 
@@ -18,11 +26,11 @@ int main(){
         int status;
 
         while((completed_pid = waitpid(-1, &status, WNOHANG)) > 0){
-            printf("Background job %d is finished!\n", completed_pid);
+            printf("\nBackground job %d is finished!\n", completed_pid);
         }
         
-        printf(R_GREEN"nova"RESET);
-        printf(": ");
+        printf(R_GREEN"nova"RESET": ");
+        
         fflush(stdout);
 
         //creating a buffer for storing the commands
@@ -50,10 +58,33 @@ int main(){
         else if(strcmp(buffer, "q") == 0 || strcmp(buffer,"quit")==0){
             break;
         }
+        //handling stopped fg jobs 
+        else if(strcmp(buffer, "fg") == 0){
+            if(stopped_jobs_count == 0){
+                printf("There are no foreground jobs running!\n");
+            }else{
+                stopped_jobs_count--;
+                pid_t pid = stopped_jobs[stopped_jobs_count].pid;
+
+                printf("continuing %s", stopped_jobs[stopped_jobs_count].command);
+
+                kill(pid, SIGCONT);
+                waitpid(pid, &status, WUNTRACED);
+                if(WIFSTOPPED(status)){
+                    stopped_jobs_count++;
+                    printf("Process %d Stopped again!\n", pid);
+                }
+            }
+        }
         else{
             char *args[10];
             int i = 0;
             int bg_process = 0;
+
+            //for handling the stopped processes
+            char saved_command[100];
+            strncpy(saved_command, buffer, sizeof(saved_command)-1);
+            strncpy[sizeof(saved_command) - 1] = '\0';
 
             char* token = strtok(buffer, " ");
 
@@ -100,7 +131,12 @@ int main(){
                             printf("%d is killed by signal %d", pid, WTERMSIG(status));
                         }
                         else if(WIFSTOPPED(status)){
-                            printf("%d is stopped by signal %d", pid, WSTOPSIG(status));
+                            printf("\n[%d] %s with pid %d stopped by %d", stopped_jobs_count +1,args[0],pid , WSTOPSIG(status));
+                            if(stopped_jobs_count < 10){
+                                stopped_jobs[stopped_jobs_count].pid = pid;
+                                strncpy(stopped_jobs[stopped_jobs_count].command, saved_command, 99);//here we gave 100 -1 because we are leaving room for null terminator, else execv() can't work for creating a new program even though its an error
+                                stopped_jobs_count++;
+                            }
                         }
                     }
             }

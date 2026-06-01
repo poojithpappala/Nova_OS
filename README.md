@@ -12,4 +12,5 @@ A Custom Shell interface built in C-Language. This is the parent shell which run
 # version - features
 * 1.0 - just basic loops for commands execution(version, help, quit)
 * 1.1 - a dynamic command parser
-* 1.2 - handled foreground and background processes(child processes)
+* 1.3 - handled foreground and background processes(child processes)
+* 1.4 - handled foreground process from interrupts(stop/kill) and introduced new command "fg" to resume
