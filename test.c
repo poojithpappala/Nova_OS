@@ -11,7 +11,7 @@
 #define RESET     "\033[0m"
 #define R_YELLOW  "\033[33m"
 #define R_RED     "\033[31m"
-#define VERSION "v1.4"   
+#define VERSION "v1.5"   
 
 //structure for handling stopped jobs
 typedef struct{
